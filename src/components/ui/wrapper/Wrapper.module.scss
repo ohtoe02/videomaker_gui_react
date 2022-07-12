@@ -1,0 +1,14 @@
+@import '../../.././assets/styles/media';
+
+.wrapper {
+  margin: auto;
+  z-index: 10;
+  max-width: 1000px;
+
+  @include media(laptop) {
+    max-width: 90%;
+  }
+  @include media(mobile) {
+    max-width: 94%;
+  }
+}
