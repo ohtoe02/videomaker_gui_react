@@ -1,5 +1,6 @@
 import styles from "./Home.module.scss"
 import {useEffect, useState} from "react";
+// import { useForm } from "react-hook-form";
 import QuestionMark from "../../ui/icons/question_mark/QuestionMark";
 import {
     Autocomplete,
@@ -39,6 +40,9 @@ const Home = () => {
         'aws': 'aws_voice',
     }
 
+    // const { register, handleSubmit, watch, formState: { errors } } = useForm();
+    // const onSubmit = data => console.log(data);
+
     useEffect(() => {
         document.title = "Reddit Video Maker"
         const voices = tts_engines.find(item => item._id === tts_engine).voices
@@ -67,7 +71,7 @@ const Home = () => {
         setInputs(values => ({...values, [name]: value}))
     }
 
-    const submitHandler = (e) => {
+    const submitHandler = async (e) => {
         e.preventDefault()
         const data = {
             reddit_username: inputs.username,
@@ -93,7 +97,17 @@ const Home = () => {
 
         data[voice_variable_names[tts_engine]] = voice_id
 
-        console.log('Готово!', data)
+        const item = await fetch('/backend/update', {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+
+        console.log(item)
+        console.log('Готово!')
     }
 
     const inputStyleCorrection = {'> div > fieldset': {'borderColor': 'black'}}
