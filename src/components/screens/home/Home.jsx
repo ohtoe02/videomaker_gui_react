@@ -1,7 +1,6 @@
 import styles from "./Home.module.scss"
 import {useEffect, useState} from "react";
 import { useForm } from "react-hook-form";
-import QuestionMark from "../../ui/icons/question_mark/QuestionMark";
 import {
     Autocomplete,
     Button, Checkbox, CircularProgress,
@@ -29,13 +28,14 @@ const Home = () => {
         'aws': 'aws_voice',
     }
 
-    const { register, handleSubmit, watch, formState: { errors } } = useForm();
+    const { register, handleSubmit, formState: { errors } } = useForm();
 
     useEffect(() => {
         const makeRequest = async () => {
-            const response = await fetch('http://localhost:8000/backend/')
+            const response = await fetch('backend/')
             const config = await response.json()
             config['allow_nsfw'] = config['allow_nsfw'] === 'True'
+            config['subreddit'] = `r/${config['subreddit']}`
             setTheme(config.theme)
             setStartupConfig(config)
             setLoading(false)
@@ -67,33 +67,7 @@ const Home = () => {
             setCurrentVoice(value)
     }
 
-    // const handleCheckChange = (e) => {
-    //     const name = e.target.name;
-    //     const value = e.target.checked;
-    //     setInputs(values => ({...values, [name]: value}))
-    // }
-
     const submitHandler = async (data) => {
-        // const payload_template = {
-        //     reddit_username: inputs.username,
-        //     reddit_password: inputs.password,
-        //     reddit_client_id: inputs.client_id,
-        //     reddit_client_secret: inputs.client_secret,
-        //     theme: inputs.theme,
-        //     subreddit: inputs.subreddit,
-        //     post_id: inputs.subreddit_post_id,
-        //     max_comment_length: parseInt(inputs.comment_length),
-        //     times_to_run: inputs.times_to_run,
-        //     opacity: parseInt(inputs.comment_opacity),
-        //     ttschoice: tts_engine,
-        //     tiktok_voice: '',
-        //     streamlabs_voice: '',
-        //     aws_voice: '',
-        //     postlang: '',
-        //     allow_nsfw: inputs.allow_nsfw,
-        //     reddit_2fa: inputs.reddit_2fa ? 'yes' : 'no'
-        // }
-
         console.log(data)
         const payload_template = {
             ...data,
@@ -104,15 +78,14 @@ const Home = () => {
             streamlabs_voice: '',
             opacity: parseFloat(data.opacity),
             max_comment_length: parseInt(data.max_comment_length),
+            subreddit: data.subreddit.replace('r/', ''),
             reddit_2fa: data.reddit_2fa ? 'yes' : 'no'}
 
         const voice_id = tts_engines.find(engine => engine._id === tts_engine).voices[currentVoice]._id
 
         payload_template[voice_variable_names[tts_engine]] = voice_id
 
-        // axios.get()
-
-        const item = await fetch('http://localhost:8000/backend/update', {
+        const item = await fetch('backend/update', {
             method: 'PUT',
             headers: {
                 'Accept': 'application/json',
@@ -135,7 +108,6 @@ const Home = () => {
 
             <form
               className={styles.form}
-              // onSubmit={e => submitHandler(e)}
               onSubmit={handleSubmit(submitHandler)}
             >
                 <section className={styles['input-section']}>
@@ -213,7 +185,7 @@ const Home = () => {
                       sx={inputStyleCorrection}
                       defaultValue={startupConfig['times_to_run']}
                       helperText={ errors.times_to_run ? errors.times_to_run?.message : ' ' }
-                      {...register('times_to_run', {min: {value: 1, message: 'Times to run value must be between 1 and 100'}, max: {value: 100, message: 'Times to run value must be between 1 and 100'}, required: {value: true, message: 'Times to run is required'} })}
+                      {...register('times_to_run', { pattern: {value: /[0-9]/i, message: 'Times to run must be a number'}, min: {value: 1, message: 'Times to run value must be between 1 and 100'}, max: {value: 100, message: 'Times to run value must be between 1 and 100'}, required: {value: true, message: 'Times to run is required'} })}
                     />
                     <div style={{display: 'flex', flexDirection: 'column'}}>
                         <TextField
@@ -225,7 +197,7 @@ const Home = () => {
                           sx={inputStyleCorrection}
                           defaultValue={startupConfig['max_comment_length']}
                           helperText={ errors.max_comment_length ? errors.max_comment_length?.message : ' ' }
-                          {...register('max_comment_length', { min: {value: 0, message: 'Max comment length value must be between 0 and 10000'}, max: {value: 10000, message: 'Max comment length value must be between 0 and 10000'}, required: {value: true, message: 'Max comment length is required'} })}
+                          {...register('max_comment_length', { pattern: {value: /[0-9]/i, message: 'Max comment length must be a number'}, min: {value: 0, message: 'Max comment length value must be between 0 and 10000'}, max: {value: 10000, message: 'Max comment length value must be between 0 and 10000'}, required: {value: true, message: 'Max comment length is required'} })}
                         />
                     </div>
                     <div style={{display: "flex", alignItems: 'center', gap: '8px'}}>
@@ -239,9 +211,8 @@ const Home = () => {
                           sx={inputStyleCorrection}
                           defaultValue={startupConfig['opacity']}
                           helperText={ errors.opacity ? errors.opacity?.message : ' ' }
-                          {...register('opacity', { min: {value: 0, message: 'Opacity value must be between 0 and 1'}, max: {value: 1, message: 'Opacity value must be between 0 and 1'}, required: {value: true, message: 'Opacity is required'} })}
+                          {...register('opacity', { pattern: {value: /^[+-]?([0-1]+([.][0-9]*)?|[.][0-9]+)$/, message: 'Opacity value must be between 0 and 1'}, min: {value: 0, message: 'Opacity value must be between 0 and 1'}, max: {value: 1, message: 'Opacity value must be between 0 and 1'}, required: {value: true, message: 'Opacity is required'} })}
                         />
-                        {/*<QuestionMark />*/}
                     </div>
                     <FormControl fullWidth sx={inputStyleCorrection}>
                         <InputLabel id="tts-select-label">TTS Engine</InputLabel>
